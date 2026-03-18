@@ -5,6 +5,8 @@ import com.example.api_rest.dto.response.UsuarioResponseDto;
 import com.example.api_rest.service.UsuarioService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/usuario")
 public class UsuarioController {
@@ -26,4 +28,8 @@ public class UsuarioController {
 
     }
 
+    @GetMapping("/find/{id}")
+    public UsuarioResponseDto findById(@PathVariable UUID id) {
+        return usuarioService.finById(id);
+    }
 }

@@ -19,4 +19,8 @@ public class ResponseArticuloDto {
         this.titulo = titulo;
         this.url = url;
     }
+
+    public ResponseArticuloDto() {
+
+    }
 }

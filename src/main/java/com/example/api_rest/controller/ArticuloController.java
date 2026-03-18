@@ -6,10 +6,9 @@ import com.example.api_rest.dto.response.ResponseArticuloDto;
 import com.example.api_rest.dto.response.UsuarioResponseDto;
 import com.example.api_rest.service.ArticuloService;
 import com.example.api_rest.service.UsuarioService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/articulo")
@@ -29,6 +28,12 @@ public class ArticuloController {
     @PostMapping("/save")
     public ResponseArticuloDto createArticulo(@RequestBody CreateArticuloDto createArticuloDto) {
         return articuloService.createArticulo(createArticuloDto);
+
+    }
+
+    @PostMapping("/find/{id}")
+    public ResponseArticuloDto findById(@PathVariable UUID id) {
+        return articuloService.findById(id);
 
     }
 

@@ -1,7 +1,11 @@
 package com.example.api_rest.entity;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+
+import com.example.api_rest.dto.response.ResponseArticuloDto;
 import jakarta.persistence.*; // O javax.persistence.* si usas una versión antigua
 import lombok.Getter;
 import lombok.Setter;
@@ -29,5 +33,7 @@ public class UsuarioEntity {
     private Date fechaCreación = new Date();
     private Date fechaActualizacion;
 
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY)
+    private List<ArticuloEntity>articulos;
 
 }
