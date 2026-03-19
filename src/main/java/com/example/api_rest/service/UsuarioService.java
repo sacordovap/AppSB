@@ -1,12 +1,17 @@
 package com.example.api_rest.service;
 
 import com.example.api_rest.dto.request.UsuarioCreateDto;
+import com.example.api_rest.dto.response.ReniecResponse;
 import com.example.api_rest.dto.response.ResponseArticuloDto;
 import com.example.api_rest.dto.response.UsuarioResponseDto;
 import com.example.api_rest.entity.ArticuloEntity;
 import com.example.api_rest.entity.UsuarioEntity;
+import com.example.api_rest.feignClient.ReniecClient;
 import com.example.api_rest.repository.UsuarioRepository;
+import feign.FeignException;
+import feign.RetryableException;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,10 +23,14 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final ModelMapper modelMapper;
+    private final ReniecClient reniecClient;
+    @Value("${api.token}")
+    private String apiToken;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, ModelMapper modelMapper) {
+    public UsuarioService(UsuarioRepository usuarioRepository, ModelMapper modelMapper, ReniecClient reniecClient) {
         this.usuarioRepository = usuarioRepository;
         this.modelMapper = modelMapper;
+        this.reniecClient = reniecClient;
     }
 
     public UsuarioResponseDto saveUsuario(UsuarioCreateDto usuario){
@@ -58,19 +67,50 @@ public class UsuarioService {
 
         return usuarioResponseDto;*/
 
-        usuario.setNombres(usuario.getNombres().toUpperCase());
-        usuario.setApellidos(usuario.getApellidos().toUpperCase());
+//        usuario.setNombres(usuario.getNombres().toUpperCase());
+//        usuario.setApellidos(usuario.getApellidos().toUpperCase());
+
+
         // una vez las reglas se cumplen
 
-        // de usuario create dto ---> Usuario entity
-        UsuarioEntity usuarioEntity = new UsuarioEntity();
-        modelMapper.map(usuario, usuarioEntity);
-        usuarioRepository.save(usuarioEntity);
+        String dni = usuario.getDni();
+        if (dni.length()!= 8 && !dni.matches("\\\\d{8}")) return null;
 
-        // de usuario entity a ---> Usuario response dto
-        UsuarioResponseDto usuarioResponseDto = new UsuarioResponseDto();
-        modelMapper.map(usuarioEntity, usuarioResponseDto);
-        return usuarioResponseDto;
+        try {
+            ReniecResponse response = reniecClient.getPersonaInfo(dni, apiToken);
+
+            if (response == null) return null;
+
+            // Lógica para generar username y apellido
+            String firstName = response.getFirstName().split("\\s+")[0].toLowerCase();
+            String firstLastName = response.getFirstLastName().toLowerCase();
+            String username = firstName + "." + firstLastName;
+
+            String apellido = response.getFirstLastName() + " " + response.getSecondLastName();
+
+            // Mapeo a Entity
+            UsuarioEntity usuarioEntity = new UsuarioEntity();
+            modelMapper.map(usuario, usuarioEntity);
+
+            usuarioEntity.setUsername(username);
+            usuarioEntity.setNombres(response.getFirstName());
+            usuarioEntity.setApellidos(apellido.trim());
+
+            usuarioRepository.save(usuarioEntity);
+
+            // Mapeo a Response DTO
+            UsuarioResponseDto usuarioResponseDto = new UsuarioResponseDto();
+            modelMapper.map(usuarioEntity, usuarioResponseDto);
+
+            return usuarioResponseDto;
+
+        } catch (RetryableException e) {
+            System.err.println("Error de tiempo de espera o conexión: " + e.getMessage());
+            return null;
+        } catch (FeignException e) {
+            System.err.println("Error de la API: " + e.status());
+            return null;
+        }
     }
 
     public UsuarioResponseDto finById (UUID usuarioId){
