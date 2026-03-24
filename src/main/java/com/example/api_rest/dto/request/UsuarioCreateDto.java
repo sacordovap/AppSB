@@ -13,7 +13,7 @@ public class UsuarioCreateDto {
     private String descripcion;
 //    private String nombres;
 //    private String apellidos;
-    private String username;
+//    private String username;
     private String password;
     private String email;
     private Date fechaNacimiento;

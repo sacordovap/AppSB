@@ -4,6 +4,7 @@ import com.example.api_rest.dto.request.CreateArticuloDto;
 import com.example.api_rest.dto.response.ResponseArticuloDto;
 import com.example.api_rest.entity.ArticuloEntity;
 import com.example.api_rest.entity.UsuarioEntity;
+import com.example.api_rest.exception.ResourceNotFoundException;
 import com.example.api_rest.repository.ArticuloRepository;
 import com.example.api_rest.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
@@ -49,7 +50,10 @@ public class ArticuloService {
 
     public ResponseArticuloDto findById (UUID artId){
         Optional<ArticuloEntity> articuloOptional = articuloRepository.findById(artId);
-        if (articuloOptional.isEmpty()) return null;
+        if (articuloOptional.isEmpty()){
+            throw new ResourceNotFoundException("usuario no encontrado");
+        };
+
 
         ArticuloEntity articulo = articuloOptional.get();
         ResponseArticuloDto articuloDto = new ResponseArticuloDto();

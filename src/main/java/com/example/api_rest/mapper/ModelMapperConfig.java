@@ -1,9 +1,12 @@
 package com.example.api_rest.mapper;
 
 import com.example.api_rest.dto.request.UsuarioCreateDto;
+import com.example.api_rest.dto.response.EmpresaResponseDto;
 import com.example.api_rest.dto.response.ResponseArticuloDto;
+import com.example.api_rest.dto.response.SunatResponse;
 import com.example.api_rest.dto.response.UsuarioResponseDto;
 import com.example.api_rest.entity.ArticuloEntity;
+import com.example.api_rest.entity.EmpresaEntity;
 import com.example.api_rest.entity.UsuarioEntity;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -22,6 +25,10 @@ public class ModelMapperConfig {
         modelMapper.createTypeMap(UsuarioEntity.class, UsuarioResponseDto.class);
         modelMapper.createTypeMap(UsuarioCreateDto.class, UsuarioEntity.class);
         modelMapper.createTypeMap(ArticuloEntity.class, ResponseArticuloDto.class);
+
+        // SUNAT:
+        modelMapper.createTypeMap(SunatResponse.class, EmpresaEntity.class);
+        modelMapper.createTypeMap(EmpresaEntity.class, EmpresaResponseDto.class);
 
         return modelMapper;
     }

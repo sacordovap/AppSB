@@ -2,10 +2,12 @@ package com.example.api_rest.controller;
 
 import com.example.api_rest.dto.request.CreateArticuloDto;
 import com.example.api_rest.dto.request.UsuarioCreateDto;
+import com.example.api_rest.dto.response.ApiResponse;
 import com.example.api_rest.dto.response.ResponseArticuloDto;
 import com.example.api_rest.dto.response.UsuarioResponseDto;
 import com.example.api_rest.service.ArticuloService;
 import com.example.api_rest.service.UsuarioService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -31,10 +33,16 @@ public class ArticuloController {
 
     }
 
-    @PostMapping("/find/{id}")
+   /* @PostMapping("/find/{id}")
     public ResponseArticuloDto findById(@PathVariable UUID id) {
         return articuloService.findById(id);
 
+    }
+*/
+    @GetMapping("/find/{id}")
+    public ResponseEntity<ApiResponse<ResponseArticuloDto>>findById(@PathVariable UUID id) {
+        ResponseArticuloDto response = articuloService.findById(id);
+        return ResponseEntity.ok(new ApiResponse<ResponseArticuloDto>(true, "Articulo encontrado", response));
     }
 
 }

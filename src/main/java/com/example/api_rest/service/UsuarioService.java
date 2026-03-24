@@ -6,11 +6,14 @@ import com.example.api_rest.dto.response.ResponseArticuloDto;
 import com.example.api_rest.dto.response.UsuarioResponseDto;
 import com.example.api_rest.entity.ArticuloEntity;
 import com.example.api_rest.entity.UsuarioEntity;
+import com.example.api_rest.exception.ExternalServiceException;
+import com.example.api_rest.exception.ResourceNotFoundException;
 import com.example.api_rest.feignClient.ReniecClient;
 import com.example.api_rest.repository.UsuarioRepository;
 import feign.FeignException;
 import feign.RetryableException;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.internal.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -76,10 +79,15 @@ public class UsuarioService {
         String dni = usuario.getDni();
         if (dni.length()!= 8 && !dni.matches("\\\\d{8}")) return null;
 
+//        try {
+        ReniecResponse response = null;
         try {
-            ReniecResponse response = reniecClient.getPersonaInfo(dni, apiToken);
-
-            if (response == null) return null;
+            // Llamada al cliente Feign con el timeout configurado en el .yml
+            response = reniecClient.getPersonaInfo(dni, apiToken);
+        } catch (Exception ex) {
+            // Si ocurre un Timeout o error de conexión, lanzamos nuestra propia excepción
+            throw new ExternalServiceException(ex.getMessage(), ex);
+        }
 
             // Lógica para generar username y apellido
             String firstName = response.getFirstName().split("\\s+")[0].toLowerCase();
@@ -104,19 +112,21 @@ public class UsuarioService {
 
             return usuarioResponseDto;
 
-        } catch (RetryableException e) {
-            System.err.println("Error de tiempo de espera o conexión: " + e.getMessage());
-            return null;
-        } catch (FeignException e) {
-            System.err.println("Error de la API: " + e.status());
-            return null;
-        }
+//        } catch (RetryableException e) {
+//            System.err.println("Error de tiempo de espera o conexión: " + e.getMessage());
+//            return null;
+//        } catch (FeignException e) {
+//            System.err.println("Error de la API: " + e.status());
+//            return null;
+//        }
     }
 
     public UsuarioResponseDto finById (UUID usuarioId){
         Optional<UsuarioEntity> usuarioOptional = usuarioRepository.findById(usuarioId);
 
-        if (usuarioOptional.isEmpty()) return null;
+        if (usuarioOptional.isEmpty()) {
+            throw new ResourceNotFoundException("usuario no encontrado");
+        };
 
         UsuarioEntity usuario = usuarioOptional.get();
         List<ArticuloEntity>articulos = usuario.getArticulos();
